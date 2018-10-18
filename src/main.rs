@@ -1,21 +1,28 @@
 extern crate sdl2;
 
+mod lib;
+
 use sdl2::event::Event;
 use sdl2::keyboard::Keycode;
 use sdl2::pixels::Color;
 use sdl2::rect::Rect;
-use sdl2::render::Canvas;
-use sdl2::video::Window;
+use sdl2::render::{Canvas, Texture, TextureCreator};
+use sdl2::video::{Window, WindowContext};
 use sdl2::Sdl;
 
 use std::thread::sleep;
 use std::time::Duration;
 
+use self::lib::{GameColor, Piece, PieceType};
+
 // constants
 const TITLE: &'static str = "Tetris in Rust";
-const WIDTH: u32 = 480;
-const HEIGHT: u32 = 860;
+
+const NUM_BLOCKS_X: u32 = 10;
+const NUM_BLOCKS_Y: u32 = 18;
 const TEXTURE_SIZE: u32 = 32;
+const WIDTH: u32 = NUM_BLOCKS_X * TEXTURE_SIZE; // 480;
+const HEIGHT: u32 = NUM_BLOCKS_Y * TEXTURE_SIZE; //860;
 
 // initialize sdl context and canvas
 fn main() {
@@ -39,29 +46,12 @@ fn main() {
         .build()
         .expect("Failed to build canvas");
 
-    draw_example_texture(&mut canvas);
-
-    start_render_loop(&sdl_context)
-}
-
-// an example texture
-fn draw_example_texture(canvas: &mut Canvas<Window>) {
     let texture_creator = canvas.texture_creator();
-
-    let mut square_texture = texture_creator
-        .create_texture_target(None, TEXTURE_SIZE, TEXTURE_SIZE)
-        .unwrap();
-
-    // use the canvas to draw a texture
-    canvas
-        .with_texture_canvas(&mut square_texture, |texture| {
-            texture.set_draw_color(Color::RGB(0, 255, 0));
-            texture.clear();
-        })
-        .unwrap();
+    let square_texture =
+        create_square_texture(&mut canvas, &texture_creator).expect("Failed to create texture");
 
     // set canvas background and clear it
-    canvas.set_draw_color(Color::RGB(255, 0, 0));
+    canvas.set_draw_color(Color::from(GameColor::Red));
     canvas.clear();
 
     // copy the texture onto the canvas and draw
@@ -73,14 +63,37 @@ fn draw_example_texture(canvas: &mut Canvas<Window>) {
         )
         .unwrap();
 
+
+
     canvas.present();
+
+    start_render_loop(&sdl_context)
+}
+
+fn create_square_texture<'a>(
+    canvas: &mut Canvas<Window>,
+    texture_creator: &'a TextureCreator<WindowContext>,
+) -> Option<Texture<'a>> {
+    let result = texture_creator.create_texture_target(None, TEXTURE_SIZE, TEXTURE_SIZE);
+
+    if let Ok(mut square_texture) = result {
+        canvas
+            .with_texture_canvas(&mut square_texture, |texture| {
+                texture.set_draw_color(Color::from(GameColor::Blue));
+                texture.clear();
+            })
+            .expect("Failed texture drawing");
+
+        Some(square_texture)
+    } else {
+        None
+    }
 }
 
 fn start_render_loop(sdl_context: &Sdl) {
     let mut event_pump = sdl_context
         .event_pump()
         .expect("Failed to get sdl context event pump");
-
 
     // loop till we receive exit signal QUIT/ESCAPE key
     'main: loop {
