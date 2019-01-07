@@ -1,60 +1,6 @@
-use rand::distributions::Standard;
-use rand::prelude::*;
-use sdl2::pixels::Color;
+use crate::game_color::GameColor;
 use std::default::Default;
-
-#[derive(Debug, Copy, Clone, Eq, PartialEq)]
-pub enum GameColor {
-    Red,
-    Green,
-    Blue,
-    Yellow,
-    Cyan,
-    Orange,
-    Purple,
-    Gray,
-}
-
-impl Default for GameColor {
-    fn default() -> Self {
-        GameColor::Red
-    }
-}
-
-impl From<GameColor> for Color {
-    fn from(color: GameColor) -> Self {
-        match color {
-            GameColor::Red => Color::RGB(255, 0, 0),
-            GameColor::Green => Color::RGB(0, 255, 0),
-            GameColor::Blue => Color::RGB(0, 0, 255),
-            GameColor::Yellow => Color::RGB(255, 255, 0),
-            GameColor::Cyan => Color::RGB(0, 255, 255),
-            GameColor::Orange => Color::RGB(255, 165, 0),
-            GameColor::Purple => Color::RGB(128, 0, 128),
-            GameColor::Gray => Color::RGB(25, 25, 25),
-        }
-    }
-}
-
-#[derive(Debug, Clone)]
-pub enum PieceType {
-    J,
-    L,
-    S,
-    Z,
-    T,
-    I,
-    O,
-}
-
-#[derive(Debug, Copy, Clone, Eq, PartialEq)]
-pub enum Presence {
-    No,
-    Yes(GameColor),
-}
-
-type PieceMatrix = [[Presence; 4]; 4];
-type GameMap = [Vec<Presence>];
+use crate::others::{GameMap, PieceMatrix, Presence, PieceType};
 
 #[derive(Default, Copy, Clone)]
 pub struct Piece {
@@ -110,9 +56,9 @@ impl Piece {
                     if x as usize + mx >= game_map[y as usize].len()
                         || y as usize + my >= game_map.len()
                         || game_map[y as usize + my][x as usize + mx] != Presence::No
-                    {
-                        return false;
-                    }
+                        {
+                            return false;
+                        }
                 }
             }
         }
@@ -176,12 +122,5 @@ impl From<PieceType> for Piece {
                 ..def
             },
         }
-    }
-}
-
-impl Distribution<PieceType> for Standard {
-    fn sample<R: Rng + ?Sized>(&self, rng: &mut R) -> PieceType {
-        use self::PieceType::*;
-        rng.choose(&[L, J, S, Z, T, I, O]).unwrap().clone()
     }
 }

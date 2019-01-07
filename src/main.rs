@@ -1,6 +1,9 @@
 extern crate sdl2;
 
-mod lib;
+mod constants;
+mod others;
+mod game_color;
+mod piece;
 
 use rand::prelude::*;
 
@@ -15,20 +18,10 @@ use sdl2::Sdl;
 use std::thread::sleep;
 use std::time::Duration;
 
-use crate::lib::{GameColor, Piece, PieceType, Presence};
-
-// constants
-const TITLE: &'static str = "Tetris in Rust";
-
-const NUM_BLOCKS_X: u32 = 10;
-const NUM_BLOCKS_Y: u32 = 18;
-
-const BORDER_WIDTH: u32 = 1;
-const TEXTURE_SIZE: u32 = 32;
-const TEXTURE_SIZE_INNER: u32 = TEXTURE_SIZE - BORDER_WIDTH * 2;
-
-const WIDTH: u32 = NUM_BLOCKS_X * TEXTURE_SIZE; // 480;
-const HEIGHT: u32 = NUM_BLOCKS_Y * TEXTURE_SIZE; //860;
+use crate::others::{PieceType, Presence};
+use crate::game_color::GameColor;
+use crate::piece::Piece;
+use crate::constants::*;
 
 struct Game {
     current_piece: Option<Piece>,
