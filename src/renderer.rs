@@ -8,14 +8,15 @@ use crate::constants::*;
 use crate::others::{Presence};
 use crate::game_color::GameColor;
 use crate::game::Game;
+use crate::piece::Piece;
 
 
-pub fn draw_tetris_piece(canvas: &mut Canvas<Window>, textures: &[Texture; 8], game: &Game) {
-    println!("drawing piece");
-    let piece = game.current_piece.unwrap();
+pub fn draw_tetris_piece(canvas: &mut Canvas<Window>, textures: &[Texture; 8], piece: &Piece) {
     let mat = piece.get_block_matrix(piece.current_state);
+
     let block_tex = &textures[piece.color as usize];
     let border_tex = &textures[GameColor::Gray as usize];
+
     let x = piece.x as usize * TEXTURE_SIZE as usize;
     let y = piece.y as usize * TEXTURE_SIZE as usize;
 
@@ -24,23 +25,23 @@ pub fn draw_tetris_piece(canvas: &mut Canvas<Window>, textures: &[Texture; 8], g
             if mat[row][col] != Presence::No {
                 let y_offset = (y + row * TEXTURE_SIZE as usize) as i32;
                 let x_offset = (x + col * TEXTURE_SIZE as usize) as i32;
-
+                //println!("({},{}) ({},{})", x, y, col, row);
                 canvas.copy(
                     &border_tex,
                     None,
-                    Rect::new(y_offset, x_offset, TEXTURE_SIZE, TEXTURE_SIZE),
-                );
+                    Rect::new(x_offset, y_offset, TEXTURE_SIZE, TEXTURE_SIZE),
+                ).unwrap();
 
                 canvas.copy(
                     &block_tex,
                     None,
                     Rect::new(
-                        y_offset + BORDER_WIDTH as i32,
                         x_offset + BORDER_WIDTH as i32,
+                        y_offset + BORDER_WIDTH as i32,
                         TEXTURE_SIZE_INNER,
                         TEXTURE_SIZE_INNER,
                     ),
-                );
+                ).unwrap();
             }
         }
     }

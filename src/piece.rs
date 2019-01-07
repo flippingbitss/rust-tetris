@@ -1,6 +1,7 @@
 use crate::game_color::GameColor;
 use std::default::Default;
 use crate::others::{GameMap, PieceMatrix, Presence, PieceType};
+use crate::constants::{NUM_BLOCKS_Y,NUM_BLOCKS_X};
 
 #[derive(Default, Copy, Clone)]
 pub struct Piece {
@@ -50,13 +51,16 @@ impl Piece {
     fn test_position(&self, game_map: &[Vec<Presence>], state: usize, x: isize, y: isize) -> bool {
         let state_m = self.get_block_matrix(state);
 
-        for mx in 0..4 {
-            for my in 0..4 {
-                if state_m[my][mx] != Presence::No {
-                    if x as usize + mx >= game_map[y as usize].len()
-                        || y as usize + my >= game_map.len()
-                        || game_map[y as usize + my][x as usize + mx] != Presence::No
+        for mx in 0..4isize {
+            for my in 0..4isize {
+                if state_m[my as usize][mx as usize] != Presence::No {
+                    if x + mx < 0 ||
+                        y + my < 0 ||
+                        x + mx >= game_map[y as usize].len() as isize ||
+                        y + my >= game_map.len() as isize ||
+                        game_map[y as usize + my as usize][x as usize + mx as usize] != Presence::No
                         {
+                            println!("test position false at ({},{}) for state {}", x + mx, y + my, state);
                             return false;
                         }
                 }
@@ -77,6 +81,42 @@ impl Piece {
             }
         }
     }
+
+    pub fn get_size(&self) -> (usize, usize) {
+        let state = self.get_block_matrix(self.current_state);
+        let (mut min_x, mut min_y, mut max_x, mut max_y) = (4,4,0,0);
+
+        for dx in 0..4 {
+            for dy in 0..4 {
+                let cell = state[dy][dx];
+                if cell != Presence::No {
+                    if dx < min_x { min_x = dx }
+                    if dy < min_y { min_y = dy }
+                    if dx > max_x { max_x = dx }
+                    if dy > max_y { max_y = dy }
+                }
+            }
+        }
+
+        (max_x - min_x + 1, max_y - min_y + 1)
+    }
+
+//    pub fn move_by(&mut self, dx: isize, dy: isize) {
+//        let (width, height) = self.get_size();
+//
+//        self.x += dx;
+//        self.y += dy;
+//
+//        if self.x < 0 { self.x = 0; }
+//        if self.y < 0 { self.y = 0; }
+//
+//        if self.x + width as isize > NUM_BLOCKS_X as isize {
+//            self.x = NUM_BLOCKS_X as isize - width as isize;
+//        }
+//        if self.y + height as isize > NUM_BLOCKS_Y as isize {
+//            self.y = NUM_BLOCKS_Y as isize - height as isize;
+//        }
+//    }
 }
 
 impl From<PieceType> for Piece {

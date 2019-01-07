@@ -52,7 +52,7 @@ fn main() {
 
     let mut game = Game::new();
 
-    draw_tetris_piece(&mut canvas, &texture_cache, &game);
+    draw_tetris_piece(&mut canvas, &texture_cache, &game.current_piece.unwrap());
     canvas.present();
 
     start_render_loop(&sdl_ctx, &mut canvas, &texture_cache, &mut game)
@@ -75,42 +75,39 @@ fn start_render_loop(
     // loop till we receive exit signal QUIT/ESCAPE key
     'main: loop {
         let mut p = game.current_piece.unwrap();
-            for event in event_pump.poll_iter() {
-                match event {
-                    Quit { .. } | KeyDown { keycode: Some(Escape), .. } => {
-                        break 'main;
-                    }
-                    KeyDown { keycode: Some(Up), .. } => {
-                        p.x -= 1;
-                    }
-                    KeyDown { keycode: Some(Down), .. } => {
-                        p.x += 1;
-                    }
-                    KeyDown { keycode: Some(Left), .. } => {
-                        p.y -= 1;
-                    }
-                    KeyDown { keycode: Some(Right), .. } => {
-                        p.y += 1;
-                    }
-                    _ => {}
-                }
+        let mut dx = 0;
+        let mut dy = 0;
 
-                // TODO refactor this clamping to remove the ugly casting
-                if p.x < 0 { p.x = 0 };
-                if p.x > WIDTH as isize - 4 * TEXTURE_SIZE as isize { p.x = WIDTH as isize - 4 * TEXTURE_SIZE as isize };
-                if p.y < 0 { p.y = 0 };
-                if p.y > HEIGHT as isize { p.y = HEIGHT as isize };
-
-
-                game.current_piece = Some(p);
-
-                // set canvas background and clear it
-                canvas.set_draw_color(GameColor::Blue);
-                canvas.clear();
-
-                draw_tetris_piece(canvas, &textures, &game);
-                canvas.present();
+        for event in event_pump.poll_iter() {
+            match event {
+                Quit { .. } | KeyDown { keycode: Some(Escape), .. } => { break 'main; }
+                KeyDown { keycode: Some(Left), .. }  => { dx -= 1; }
+                KeyDown { keycode: Some(Right), .. } => { dx += 1; }
+                KeyDown { keycode: Some(Up), .. }    => { p.rotate(&game.game_map); }
+                KeyDown { keycode: Some(Down), .. }  => { dy += 1; }
+//                KeyDown { keycode: Some(Space), .. }  => { p = Piece::from(random::<PieceType>()); }
+                _ => {}
             }
+        }
+
+
+        if p.move_position(&game.game_map, p.x + dx, p.y + dy) {
+          //  println!("{},{}", p.x, p.y);
+
+        } else {
+            println!("{}", "didn't move");
+        }
+
+//        println!("({},{})", p.x ,p.y);
+        game.current_piece = Some(p);
+
+        // set canvas background and clear it
+        canvas.set_draw_color(GameColor::Gray);
+        canvas.clear();
+
+        draw_tetris_piece(canvas, &textures, &p);
+        canvas.present();
+
 
         sleep(Duration::new(0, 1_000_000_000u32 / 60)); // for 60 fps TODO: use better time sync
     }
