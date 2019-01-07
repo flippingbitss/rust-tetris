@@ -3,7 +3,7 @@ use rand::prelude::*;
 use sdl2::pixels::Color;
 use std::default::Default;
 
-#[derive(Debug)]
+#[derive(Debug, Copy, Clone, Eq, PartialEq)]
 pub enum GameColor {
     Red,
     Green,
@@ -50,18 +50,18 @@ pub enum PieceType {
 #[derive(Debug, Copy, Clone, Eq, PartialEq)]
 pub enum Presence {
     No,
-    Yes,
+    Yes(GameColor),
 }
 
 type PieceMatrix = [[Presence; 4]; 4];
 type GameMap = [Vec<Presence>];
 
-#[derive(Default)]
+#[derive(Default, Copy, Clone)]
 pub struct Piece {
     pub states: [u16; 4],
     pub color: GameColor,
     pub x: isize,
-    pub y: usize,
+    pub y: isize,
     pub current_state: usize,
 }
 
@@ -79,7 +79,7 @@ impl Piece {
         }
     }
 
-    pub fn move_position(&mut self, game_map: &GameMap, new_x: isize, new_y: usize) -> bool {
+    pub fn move_position(&mut self, game_map: &GameMap, new_x: isize, new_y: isize) -> bool {
         if self.test_position(&game_map, self.current_state, new_x, new_y) {
             self.x = new_x;
             self.y = new_y;
@@ -95,21 +95,21 @@ impl Piece {
 
         for i in 0..16 {
             if num & 1u16 << 15 - i > 0 {
-                res[i / 4][i % 4] = Yes
+                res[i / 4][i % 4] = Yes(self.color)
             }
         }
         res
     }
 
-    fn test_position(&self, game_map: &[Vec<Presence>], state: usize, x: isize, y: usize) -> bool {
+    fn test_position(&self, game_map: &[Vec<Presence>], state: usize, x: isize, y: isize) -> bool {
         let state_m = self.get_block_matrix(state);
 
         for mx in 0..4 {
             for my in 0..4 {
-                if state_m[my][mx] == Presence::Yes {
-                    if x as usize + mx >= game_map[y].len()
-                        || y + my >= game_map.len()
-                        || game_map[y + my][x as usize + mx] == Presence::Yes
+                if state_m[my][mx] != Presence::No {
+                    if x as usize + mx >= game_map[y as usize].len()
+                        || y as usize + my >= game_map.len()
+                        || game_map[y as usize + my][x as usize + mx] != Presence::No
                     {
                         return false;
                     }
@@ -117,6 +117,19 @@ impl Piece {
             }
         }
         true
+    }
+
+    fn freeze(&self, game_map: &mut [Vec<Presence>]) {
+        let state = self.get_block_matrix(self.current_state);
+
+        for dx in 0..4 {
+            for dy in 0..4 {
+                let cell = state[dy][dx];
+                if cell != Presence::No {
+                    game_map[self.y as usize + dy][self.x as usize + dx] = cell;
+                }
+            }
+        }
     }
 }
 
