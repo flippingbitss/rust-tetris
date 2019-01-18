@@ -11,6 +11,7 @@ pub enum GameColor {
     Orange,
     Purple,
     Gray,
+    Pink
 }
 
 impl Default for GameColor {
@@ -30,6 +31,7 @@ impl From<GameColor> for Color {
             GameColor::Orange => Color::RGB(255, 165, 0),
             GameColor::Purple => Color::RGB(128, 0, 128),
             GameColor::Gray => Color::RGB(25, 25, 25),
+            GameColor::Pink => Color::RGB(255, 105, 180),
         }
     }
 }

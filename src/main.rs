@@ -48,6 +48,7 @@ fn main() {
         texture!(GameColor::Orange),
         texture!(GameColor::Purple),
         texture!(GameColor::Gray),
+        texture!(GameColor::Pink),
     ];
 
     let mut game = Game::new();
@@ -62,7 +63,7 @@ fn main() {
 fn start_render_loop(
     sdl_context: &Sdl,
     canvas: &mut Canvas<Window>,
-    textures: &[Texture; 8],
+    textures: &[Texture; 9],
     game: &mut Game,
 ) {
     use self::Event::{KeyDown, Quit};
@@ -85,20 +86,12 @@ fn start_render_loop(
                 KeyDown { keycode: Some(Right), .. } => { dx += 1; }
                 KeyDown { keycode: Some(Up), .. }    => { p.rotate(&game.game_map); }
                 KeyDown { keycode: Some(Down), .. }  => { dy += 1; }
-//                KeyDown { keycode: Some(Space), .. }  => { p = Piece::from(random::<PieceType>()); }
+                KeyDown { keycode: Some(Space), .. }  => { p = Piece::from(random::<PieceType>()); }
                 _ => {}
             }
         }
 
-
-        if p.move_position(&game.game_map, p.x + dx, p.y + dy) {
-          //  println!("{},{}", p.x, p.y);
-
-        } else {
-            println!("{}", "didn't move");
-        }
-
-//        println!("({},{})", p.x ,p.y);
+        p.move_position(&game.game_map, p.x + dx, p.y + dy); \
         game.current_piece = Some(p);
 
         // set canvas background and clear it

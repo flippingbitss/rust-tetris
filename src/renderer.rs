@@ -1,5 +1,6 @@
 use sdl2::pixels::Color;
 use sdl2::rect::Rect;
+use sdl2::rect::Point;
 use sdl2::render::{Canvas, Texture, TextureCreator};
 use sdl2::video::{Window, WindowContext};
 use sdl2::Sdl;
@@ -11,40 +12,77 @@ use crate::game::Game;
 use crate::piece::Piece;
 
 
-pub fn draw_tetris_piece(canvas: &mut Canvas<Window>, textures: &[Texture; 8], piece: &Piece) {
+pub fn draw_tetris_piece(canvas: &mut Canvas<Window>, textures: &[Texture; 9], piece: &Piece) {
     let mat = piece.get_block_matrix(piece.current_state);
 
     let block_tex = &textures[piece.color as usize];
     let border_tex = &textures[GameColor::Gray as usize];
 
-    let x = piece.x as usize * TEXTURE_SIZE as usize;
-    let y = piece.y as usize * TEXTURE_SIZE as usize;
+    let (min_x, max_x, min_y, max_y) = piece.get_filled_region(mat);
 
-    for row in 0..4 {
+    let x = piece.x;
+    let y = piece.y;
+
+    for row in 0..4{
         for col in 0..4 {
-            if mat[row][col] != Presence::No {
-                let y_offset = (y + row * TEXTURE_SIZE as usize) as i32;
-                let x_offset = (x + col * TEXTURE_SIZE as usize) as i32;
-                //println!("({},{}) ({},{})", x, y, col, row);
-                canvas.copy(
-                    &border_tex,
-                    None,
-                    Rect::new(x_offset, y_offset, TEXTURE_SIZE, TEXTURE_SIZE),
-                ).unwrap();
+                let y_offset = ((y + row as isize) * TEXTURE_SIZE as isize) as i32;
+                let x_offset = ((x + col as isize) * TEXTURE_SIZE as isize) as i32;
 
-                canvas.copy(
-                    &block_tex,
-                    None,
-                    Rect::new(
-                        x_offset + BORDER_WIDTH as i32,
-                        y_offset + BORDER_WIDTH as i32,
-                        TEXTURE_SIZE_INNER,
-                        TEXTURE_SIZE_INNER,
-                    ),
-                ).unwrap();
-            }
+                if mat[row][col] != Presence::No {
+                    // draw filled region
+                    canvas.copy(
+                        &border_tex,
+                        None,
+                        Rect::new(x_offset, y_offset, TEXTURE_SIZE, TEXTURE_SIZE),
+                    ).unwrap();
+
+                    canvas.copy(
+                        &block_tex,
+                        None,
+                        Rect::new(
+                            x_offset + BORDER_WIDTH as i32,
+                            y_offset + BORDER_WIDTH as i32,
+                            TEXTURE_SIZE_INNER,
+                            TEXTURE_SIZE_INNER,
+                        ),
+                    ).unwrap();
+
+                } else {
+                    // debug bounds ----- TODO: remove this debug block
+                    // draw empty cells
+                    canvas.copy(
+                        &block_tex,
+                        None,
+                        Rect::new(x_offset, y_offset, TEXTURE_SIZE, TEXTURE_SIZE),
+                    ).unwrap();
+
+                    canvas.copy(
+                        &border_tex,
+                        None,
+                        Rect::new(x_offset + BORDER_WIDTH as i32, y_offset + BORDER_WIDTH as i32, TEXTURE_SIZE_INNER, TEXTURE_SIZE_INNER),
+                    ).unwrap();
+                }
+
+//            }
         }
     }
+
+    // debug bounds ------- TODO: remove these debug bounds
+   let min_x = (x as i32 + min_x as i32) * TEXTURE_SIZE as i32;
+   let min_y = (y as i32 + min_y as i32) * TEXTURE_SIZE as i32;
+   let max_x = (x as i32 + max_x as i32) * TEXTURE_SIZE as i32;
+   let max_y = (y as i32 + max_y as i32) * TEXTURE_SIZE as i32;
+
+    canvas.set_draw_color(GameColor::Pink);
+    let mut points = vec![
+        Point::new(min_x, min_y),
+        Point::new(max_x, min_y),
+        Point::new(max_x, max_y),
+        Point::new(min_x, max_y),
+        Point::new(min_x, min_y),
+    ];
+    canvas.draw_lines(points.as_slice());
+    // -----
 }
 
 pub fn create_texture_rect<'a>(
