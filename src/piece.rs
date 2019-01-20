@@ -79,7 +79,9 @@ impl Piece {
             for dy in 0..4 {
                 let cell = state[dy][dx];
                 if cell != Presence::No {
-                    game_map[self.y as usize + dy][self.x as usize + dx] = cell;
+                    let x = self.x + dx as isize;
+                    let y = self.y + dy as isize;
+                    game_map[y as usize][x as usize] = cell;
                 }
             }
         }
