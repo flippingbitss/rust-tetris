@@ -2,6 +2,7 @@ use crate::game_color::GameColor;
 use std::default::Default;
 use crate::others::{GameMap, PieceMatrix, Presence, PieceType};
 use crate::constants::{NUM_BLOCKS_Y,NUM_BLOCKS_X};
+use rand::random;
 
 #[derive(Default, Copy, Clone)]
 pub struct Piece {
@@ -13,6 +14,10 @@ pub struct Piece {
 }
 
 impl Piece {
+    pub fn random() -> Self {
+        Piece::from(random::<PieceType>())
+    }
+
     pub fn rotate(&mut self, game_map: &GameMap) {
         let temp_state = (self.current_state + 1) % 4;
         let x_pos_matches = [0, -1, 1, -2, 2, -3];
@@ -67,7 +72,7 @@ impl Piece {
         true
     }
 
-    fn freeze(&self, game_map: &mut [Vec<Presence>]) {
+    pub fn freeze(&self, game_map: &mut [Vec<Presence>]) {
         let state = self.get_block_matrix(self.current_state);
 
         for dx in 0..4 {

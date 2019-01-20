@@ -23,7 +23,7 @@ use crate::game_color::GameColor;
 use crate::piece::Piece;
 use crate::game::Game;
 use crate::constants::*;
-use crate::renderer::{create_window, draw_tetris_piece, create_texture_rect};
+use crate::renderer::{create_window, draw_tetris_piece, create_texture_rect, draw_map};
 
 // initialize sdl context and canvas
 fn main() {
@@ -86,18 +86,23 @@ fn start_render_loop(
                 KeyDown { keycode: Some(Right), .. } => { dx += 1; }
                 KeyDown { keycode: Some(Up), .. }    => { p.rotate(&game.game_map); }
                 KeyDown { keycode: Some(Down), .. }  => { dy += 1; }
-                KeyDown { keycode: Some(Space), .. }  => { p = Piece::from(random::<PieceType>()); }
+                KeyDown { keycode: Some(Space), .. }  => { p = Piece::random(); }
+                KeyDown { keycode: Some(F), .. }  => {
+                    p.freeze(&mut game.game_map);
+                    p = Piece::random();
+                }
                 _ => {}
             }
         }
 
-        p.move_position(&game.game_map, p.x + dx, p.y + dy); \
+        p.move_position(&game.game_map, p.x + dx, p.y + dy);
         game.current_piece = Some(p);
 
         // set canvas background and clear it
         canvas.set_draw_color(GameColor::Gray);
         canvas.clear();
 
+        draw_map(canvas, &textures, &game.game_map);
         draw_tetris_piece(canvas, &textures, &p);
         canvas.present();
 

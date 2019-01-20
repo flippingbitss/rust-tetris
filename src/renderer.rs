@@ -8,7 +8,7 @@ use sdl2::Sdl;
 use crate::constants::*;
 use crate::others::{Presence};
 use crate::game_color::GameColor;
-use crate::game::Game;
+use crate::game::{Game,GameMap};
 use crate::piece::Piece;
 
 
@@ -84,6 +84,39 @@ pub fn draw_tetris_piece(canvas: &mut Canvas<Window>, textures: &[Texture; 9], p
     canvas.draw_lines(points.as_slice());
     // -----
 }
+
+
+pub fn draw_map(canvas: &mut Canvas<Window>, textures: &[Texture; 9], game_map: &GameMap) {
+    let border_tex = &textures[GameColor::Gray as usize];
+
+    for row in 0..NUM_BLOCKS_Y {
+        for col in 0..NUM_BLOCKS_X  {
+            if let Presence::Yes(color) = game_map[row][col] {
+                let block_tex = &textures[color as usize];
+                let x_offset = col as i32 * TEXTURE_SIZE as i32;
+                let y_offset = row as i32 * TEXTURE_SIZE as i32;
+
+                canvas.copy(
+                    &border_tex,
+                    None,
+                    Rect::new(x_offset, y_offset, TEXTURE_SIZE, TEXTURE_SIZE),
+                ).unwrap();
+
+                canvas.copy(
+                    &block_tex,
+                    None,
+                    Rect::new(
+                        x_offset + BORDER_WIDTH as i32,
+                        y_offset + BORDER_WIDTH as i32,
+                        TEXTURE_SIZE_INNER,
+                        TEXTURE_SIZE_INNER,
+                    ),
+                ).unwrap();
+            }
+        }
+    }
+}
+
 
 pub fn create_texture_rect<'a>(
     canvas: &mut Canvas<Window>,

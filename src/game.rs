@@ -3,6 +3,8 @@ use crate::constants::*;
 use crate::others::{Presence,PieceType};
 use rand::random;
 
+pub type GameMap = Vec<Vec<Presence>>;
+
 pub struct Game {
     pub current_piece: Option<Piece>,
     pub score: usize,
