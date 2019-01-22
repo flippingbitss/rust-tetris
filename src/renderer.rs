@@ -12,7 +12,7 @@ use crate::game::{Game,GameMap};
 use crate::piece::Piece;
 
 
-pub fn draw_tetris_piece(canvas: &mut Canvas<Window>, textures: &[Texture; 9], piece: &Piece) {
+pub fn draw_piece(canvas: &mut Canvas<Window>, textures: &[Texture; 9], piece: &Piece) {
     let mat = piece.get_block_matrix(piece.current_state);
 
     let block_tex = &textures[piece.color as usize];

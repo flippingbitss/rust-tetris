@@ -52,7 +52,7 @@ impl Piece {
         res
     }
 
-    fn test_position(&self, game_map: &[Vec<Presence>], state: usize, x: isize, y: isize) -> bool {
+    pub fn test_position(&self, game_map: &[Vec<Presence>], state: usize, x: isize, y: isize) -> bool {
         let state_m = self.get_block_matrix(state);
 
         for mx in 0..4isize {
@@ -114,7 +114,7 @@ impl From<PieceType> for Piece {
 
         match piece_type {
             L => Piece {
-                states: [17504, 736, 1570, 1856],
+                states: [17504, 1856, 1570, 736],
                 color: GameColor::Orange,
                 ..def
             },
@@ -134,7 +134,7 @@ impl From<PieceType> for Piece {
                 ..def
             },
             T => Piece {
-                states: [17984, 3648, 17984, 3648],
+                states: [17984, 3648, 19520, 19968],
                 color: GameColor::Purple,
                 ..def
             },

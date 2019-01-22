@@ -16,14 +16,14 @@ use sdl2::video::{Window};
 use sdl2::Sdl;
 
 use std::thread::sleep;
-use std::time::Duration;
+use std::time::{Duration,Instant};
 
 use crate::others::{PieceType, Presence};
 use crate::game_color::GameColor;
 use crate::piece::Piece;
 use crate::game::Game;
 use crate::constants::*;
-use crate::renderer::{create_window, draw_tetris_piece, create_texture_rect, draw_map};
+use crate::renderer::{create_window, draw_piece, create_texture_rect, draw_map};
 
 // initialize sdl context and canvas
 fn main() {
@@ -53,7 +53,7 @@ fn main() {
 
     let mut game = Game::new();
 
-    draw_tetris_piece(&mut canvas, &texture_cache, &game.current_piece.unwrap());
+    draw_piece(&mut canvas, &texture_cache, &game.current_piece.unwrap());
     canvas.present();
 
     start_render_loop(&sdl_ctx, &mut canvas, &texture_cache, &mut game)
@@ -69,42 +69,56 @@ fn start_render_loop(
     use self::Event::{KeyDown, Quit};
     use self::Keycode::*;
 
+    let mut last_instant = Instant::now();
+
     let mut event_pump = sdl_context
         .event_pump()
         .expect("Failed to get sdl context event pump");
 
     // loop till we receive exit signal QUIT/ESCAPE key
     'main: loop {
-        let mut p = game.current_piece.unwrap();
-        let mut dx = 0;
-        let mut dy = 0;
 
-        for event in event_pump.poll_iter() {
-            match event {
-                Quit { .. } | KeyDown { keycode: Some(Escape), .. } => { break 'main; }
-                KeyDown { keycode: Some(Left), .. }  => { dx -= 1; }
-                KeyDown { keycode: Some(Right), .. } => { dx += 1; }
-                KeyDown { keycode: Some(Up), .. }    => { p.rotate(&game.game_map); }
-                KeyDown { keycode: Some(Down), .. }  => { dy += 1; }
-                KeyDown { keycode: Some(Space), .. }  => { p = Piece::random(); }
-                KeyDown { keycode: Some(F), .. }  => {
-                    p.freeze(&mut game.game_map);
-                    p = Piece::random();
+            let mut p = game.current_piece.unwrap();
+            let mut dx = 0;
+            let mut dy = 0;
+
+            if last_instant.elapsed().as_secs() >= 1 {
+                if !p.test_position(&game.map, p.current_state, p.x, p.y + 1) {
+                    game.finalize_move(&mut p);
+                } else {
+                    p.move_position(&game.map, p.x, p.y + 1);
                 }
-                _ => {}
+
+                last_instant = Instant::now();
             }
-        }
 
-        p.move_position(&game.game_map, p.x + dx, p.y + dy);
-        game.current_piece = Some(p);
+            for event in event_pump.poll_iter() {
+                match event {
+                    Quit { .. } | KeyDown { keycode: Some(Escape), .. } => { break 'main; }
+                    KeyDown { keycode: Some(Left), .. } => { dx -= 1; }
+                    KeyDown { keycode: Some(Right), .. } => { dx += 1; }
+                    KeyDown { keycode: Some(Up), .. } => { p.rotate(&game.map); }
+                    KeyDown { keycode: Some(Down), .. } => { dy += 1; }
+                    KeyDown { keycode: Some(Space), .. } => {
+                        while p.move_position(&game.map, p.x, p.y + 1) {}
+                        game.finalize_move(&mut p);
+                    }
+                    KeyDown { keycode: Some(N), .. } => { p = Piece::random(); }
+                    KeyDown { keycode: Some(F), .. } => { game.finalize_move(&mut p); }
+                    _ => {}
+                }
+            }
 
-        // set canvas background and clear it
-        canvas.set_draw_color(GameColor::Gray);
-        canvas.clear();
+            p.move_position(&game.map, p.x + dx, p.y + dy);
+            game.current_piece = Some(p);
 
-        draw_map(canvas, &textures, &game.game_map);
-        draw_tetris_piece(canvas, &textures, &p);
-        canvas.present();
+            // set canvas background and clear it
+            canvas.set_draw_color(GameColor::Gray);
+            canvas.clear();
+
+            draw_map(canvas, &textures, &game.map);
+            draw_piece(canvas, &textures, &p);
+            canvas.present();
 
 
         sleep(Duration::new(0, 1_000_000_000u32 / 60)); // for 60 fps TODO: use better time sync
