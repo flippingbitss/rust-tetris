@@ -9,6 +9,7 @@ pub struct Game {
     pub current_piece: Option<Piece>,
     pub score: usize,
     pub lines_cleared: usize,
+    pub current_level: usize,
     pub map: Vec<Vec<Presence>>,
 }
 
@@ -18,6 +19,7 @@ impl Game {
             current_piece: Some(Piece::from(random::<PieceType>())),
             score: 0,
             lines_cleared: 0,
+            current_level: 0,
             map: vec![vec![Presence::No; NUM_BLOCKS_X]; NUM_BLOCKS_Y],
         }
     }
@@ -31,8 +33,7 @@ impl Game {
             }
         }
 
-        self.lines_cleared += to_clear.len();
-        println!("cleared {}", self.lines_cleared);
+        self.increase_lines(to_clear.len());
 
         for index in to_clear.into_iter() {
             self.map.remove(index);
@@ -44,5 +45,12 @@ impl Game {
         piece.freeze(&mut self.map);
         self.check_lines();
         *piece = Piece::random();
+    }
+
+    fn increase_lines(&mut self, delta: usize) {
+        self.lines_cleared += delta;
+        if self.lines_cleared > LEVEL_LINES[self.current_level] {
+            self.current_level += 1;
+        }
     }
 }

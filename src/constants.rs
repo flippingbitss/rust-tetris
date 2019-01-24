@@ -9,3 +9,7 @@ pub const TEXTURE_SIZE_INNER: u32 = TEXTURE_SIZE - BORDER_WIDTH * 2;
 
 pub const WIDTH: u32 = NUM_BLOCKS_X as u32 * TEXTURE_SIZE; // 480;
 pub const HEIGHT: u32 = NUM_BLOCKS_Y as u32 * TEXTURE_SIZE; // 860;
+
+pub const LEVEL_TIMES: [usize; 10] = [1000, 850, 700, 600, 500, 400, 300, 250, 221, 190];
+pub const LEVEL_LINES: [usize; 10] = [20, 40, 60, 80, 100, 120, 140, 160, 180, 200];
+

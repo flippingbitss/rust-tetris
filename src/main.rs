@@ -1,3 +1,5 @@
+#![feature(duration_as_u128)]
+
 extern crate sdl2;
 
 mod constants;
@@ -9,11 +11,11 @@ mod piece;
 
 use rand::prelude::*;
 
-use sdl2::event::Event;
-use sdl2::keyboard::Keycode;
+
 use sdl2::render::{Canvas, Texture};
 use sdl2::video::{Window};
 use sdl2::Sdl;
+use sdl2::EventPump;
 
 use std::thread::sleep;
 use std::time::{Duration,Instant};
@@ -29,6 +31,10 @@ use crate::renderer::{create_window, draw_piece, create_texture_rect, draw_map};
 fn main() {
     let (sdl_ctx, mut canvas) = create_window();
 
+    let mut event_pump = sdl_ctx
+        .event_pump()
+        .expect("Failed to get sdl context event pump");
+
     let texture_creator = canvas.texture_creator();
 
     macro_rules! texture {
@@ -39,7 +45,7 @@ fn main() {
     }
 
     // generate all the textures needed later on at once
-    let texture_cache = [
+    let textures = [
         texture!(GameColor::Red),
         texture!(GameColor::Green),
         texture!(GameColor::Blue),
@@ -51,76 +57,72 @@ fn main() {
         texture!(GameColor::Pink),
     ];
 
+
     let mut game = Game::new();
-
-    draw_piece(&mut canvas, &texture_cache, &game.current_piece.unwrap());
-    canvas.present();
-
-    start_render_loop(&sdl_ctx, &mut canvas, &texture_cache, &mut game)
-}
-
-
-fn start_render_loop(
-    sdl_context: &Sdl,
-    canvas: &mut Canvas<Window>,
-    textures: &[Texture; 9],
-    game: &mut Game,
-) {
-    use self::Event::{KeyDown, Quit};
-    use self::Keycode::*;
-
     let mut last_instant = Instant::now();
 
-    let mut event_pump = sdl_context
-        .event_pump()
-        .expect("Failed to get sdl context event pump");
 
     // loop till we receive exit signal QUIT/ESCAPE key
-    'main: loop {
+    loop {
+        let mut p = game.current_piece.unwrap();
+        let mut quit = false;
 
-            let mut p = game.current_piece.unwrap();
-            let mut dx = 0;
-            let mut dy = 0;
+        println!("{}, {}", last_instant.elapsed().as_millis(), LEVEL_TIMES[game.current_level]);
 
-            if last_instant.elapsed().as_secs() >= 1 {
-                if !p.test_position(&game.map, p.current_state, p.x, p.y + 1) {
-                    game.finalize_move(&mut p);
-                } else {
-                    p.move_position(&game.map, p.x, p.y + 1);
-                }
-
-                last_instant = Instant::now();
+        if last_instant.elapsed().as_millis() > LEVEL_TIMES[game.current_level] as u128 {
+            if !p.move_position(&game.map, p.x, p.y + 1) {
+                println!("move pos {}", false);
+                game.finalize_move(&mut p);
             }
+            last_instant = Instant::now();
+        }
+        game.current_piece = Some(p);
 
-            for event in event_pump.poll_iter() {
-                match event {
-                    Quit { .. } | KeyDown { keycode: Some(Escape), .. } => { break 'main; }
-                    KeyDown { keycode: Some(Left), .. } => { dx -= 1; }
-                    KeyDown { keycode: Some(Right), .. } => { dx += 1; }
-                    KeyDown { keycode: Some(Up), .. } => { p.rotate(&game.map); }
-                    KeyDown { keycode: Some(Down), .. } => { dy += 1; }
-                    KeyDown { keycode: Some(Space), .. } => {
-                        while p.move_position(&game.map, p.x, p.y + 1) {}
-                        game.finalize_move(&mut p);
-                    }
-                    KeyDown { keycode: Some(N), .. } => { p = Piece::random(); }
-                    KeyDown { keycode: Some(F), .. } => { game.finalize_move(&mut p); }
-                    _ => {}
-                }
-            }
+        handle_events(&mut game, &mut event_pump, &mut quit);
+        render_scene(&mut canvas, &textures, &game);
 
-            p.move_position(&game.map, p.x + dx, p.y + dy);
-            game.current_piece = Some(p);
-
-            // set canvas background and clear it
-            canvas.set_draw_color(GameColor::Gray);
-            canvas.clear();
-
-            draw_map(canvas, &textures, &game.map);
-            draw_piece(canvas, &textures, &p);
-            canvas.present();
-
-
-        sleep(Duration::new(0, 1_000_000_000u32 / 60)); // for 60 fps TODO: use better time sync
+        if quit {
+            break;
+        }
     }
+}
+
+fn handle_events(game: &mut Game, event_pump: &mut EventPump, quit: &mut bool) {
+    use sdl2::event::Event::{KeyDown,Quit};
+    use sdl2::keyboard::Keycode::*;
+
+    let mut p = game.current_piece.unwrap();
+    let (mut dx, mut dy) = (0,0);
+
+    for event in event_pump.poll_iter() {
+        match event {
+            Quit { .. } | KeyDown { keycode: Some(Escape), .. } => { *quit = true; }
+            KeyDown { keycode: Some(Left), .. } => { dx -= 1; }
+            KeyDown { keycode: Some(Right), .. } => { dx += 1; }
+            KeyDown { keycode: Some(Up), .. } => { p.rotate(&game.map); }
+            KeyDown { keycode: Some(Down), .. } => { dy += 1; }
+            KeyDown { keycode: Some(Space), .. } => {
+                while p.move_position(&game.map, p.x, p.y + 1) {}
+                game.finalize_move(&mut p);
+            }
+            KeyDown { keycode: Some(N), .. } => { p = Piece::random(); }
+            KeyDown { keycode: Some(F), .. } => { game.finalize_move(&mut p); }
+            _ => {}
+        }
+    }
+
+    p.move_position(&game.map, p.x + dx, p.y + dy);
+    game.current_piece = Some(p);
+}
+
+fn render_scene(mut canvas: &mut Canvas<Window>, textures: &[Texture; 9], game: &Game) {
+    // set canvas background and clear it
+    canvas.set_draw_color(GameColor::Gray);
+    canvas.clear();
+
+    draw_map(&mut canvas, &textures, &game.map);
+    draw_piece(&mut canvas, &textures, &game.current_piece.unwrap());
+    canvas.present();
+
+    sleep(Duration::new(0, 1_000_000_000u32 / 60)); // for 60 fps TODO: use better time sync
 }
