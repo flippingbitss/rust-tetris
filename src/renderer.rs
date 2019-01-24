@@ -25,64 +25,31 @@ pub fn draw_piece(canvas: &mut Canvas<Window>, textures: &[Texture; 9], piece: &
 
     for row in 0..4{
         for col in 0..4 {
-                let y_offset = ((y + row as isize) * TEXTURE_SIZE as isize) as i32;
-                let x_offset = ((x + col as isize) * TEXTURE_SIZE as isize) as i32;
+            let y_offset = ((y + row as isize) * TEXTURE_SIZE as isize) as i32;
+            let x_offset = ((x + col as isize) * TEXTURE_SIZE as isize) as i32;
 
-                if mat[row][col] != Presence::No {
-                    // draw filled region
-                    canvas.copy(
-                        &border_tex,
-                        None,
-                        Rect::new(x_offset, y_offset, TEXTURE_SIZE, TEXTURE_SIZE),
-                    ).unwrap();
+            if mat[row][col] != Presence::No {
+                // draw filled region
+                canvas.copy(
+                    &border_tex,
+                    None,
+                    Rect::new(x_offset, y_offset, TEXTURE_SIZE, TEXTURE_SIZE),
+                ).unwrap();
 
-                    canvas.copy(
-                        &block_tex,
-                        None,
-                        Rect::new(
-                            x_offset + BORDER_WIDTH as i32,
-                            y_offset + BORDER_WIDTH as i32,
-                            TEXTURE_SIZE_INNER,
-                            TEXTURE_SIZE_INNER,
-                        ),
-                    ).unwrap();
+                canvas.copy(
+                    &block_tex,
+                    None,
+                    Rect::new(
+                        x_offset + BORDER_WIDTH as i32,
+                        y_offset + BORDER_WIDTH as i32,
+                        TEXTURE_SIZE_INNER,
+                        TEXTURE_SIZE_INNER,
+                    ),
+                ).unwrap();
 
-                } else {
-                    // debug bounds ----- TODO: remove this debug block
-                    // draw empty cells
-                    canvas.copy(
-                        &block_tex,
-                        None,
-                        Rect::new(x_offset, y_offset, TEXTURE_SIZE, TEXTURE_SIZE),
-                    ).unwrap();
-
-                    canvas.copy(
-                        &border_tex,
-                        None,
-                        Rect::new(x_offset + BORDER_WIDTH as i32, y_offset + BORDER_WIDTH as i32, TEXTURE_SIZE_INNER, TEXTURE_SIZE_INNER),
-                    ).unwrap();
-                }
-
-//            }
+            }
         }
     }
-
-    // debug bounds ------- TODO: remove these debug bounds
-   let min_x = (x as i32 + min_x as i32) * TEXTURE_SIZE as i32;
-   let min_y = (y as i32 + min_y as i32) * TEXTURE_SIZE as i32;
-   let max_x = (x as i32 + max_x as i32) * TEXTURE_SIZE as i32;
-   let max_y = (y as i32 + max_y as i32) * TEXTURE_SIZE as i32;
-
-    canvas.set_draw_color(GameColor::Pink);
-    let mut points = vec![
-        Point::new(min_x, min_y),
-        Point::new(max_x, min_y),
-        Point::new(max_x, max_y),
-        Point::new(min_x, max_y),
-        Point::new(min_x, min_y),
-    ];
-    canvas.draw_lines(points.as_slice());
-    // -----
 }
 
 
