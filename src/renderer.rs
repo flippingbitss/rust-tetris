@@ -18,8 +18,6 @@ pub fn draw_piece(canvas: &mut Canvas<Window>, textures: &[Texture; 9], piece: &
     let block_tex = &textures[piece.color as usize];
     let border_tex = &textures[GameColor::Gray as usize];
 
-    let (min_x, max_x, min_y, max_y) = piece.get_filled_region(mat);
-
     let x = piece.x;
     let y = piece.y;
 
@@ -46,7 +44,6 @@ pub fn draw_piece(canvas: &mut Canvas<Window>, textures: &[Texture; 9], piece: &
                         TEXTURE_SIZE_INNER,
                     ),
                 ).unwrap();
-
             }
         }
     }
@@ -120,7 +117,7 @@ pub fn create_window() -> (Sdl, Canvas<Window>) {
         .build()
         .expect("Failed to create window");
 
-    let mut canvas = window
+    let canvas = window
         .into_canvas()
         .target_texture()
         .present_vsync()

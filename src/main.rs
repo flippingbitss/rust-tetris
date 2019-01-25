@@ -61,33 +61,29 @@ fn main() {
     let mut game = Game::new();
     let mut last_instant = Instant::now();
 
-
     // loop till we receive exit signal QUIT/ESCAPE key
     loop {
         let mut p = game.current_piece.unwrap();
-        let mut quit = false;
-
-        println!("{}, {}", last_instant.elapsed().as_millis(), LEVEL_TIMES[game.current_level]);
 
         if last_instant.elapsed().as_millis() > LEVEL_TIMES[game.current_level] as u128 {
             if !p.move_position(&game.map, p.x, p.y + 1) {
-                println!("move pos {}", false);
                 game.finalize_move(&mut p);
             }
+
             last_instant = Instant::now();
         }
         game.current_piece = Some(p);
 
-        handle_events(&mut game, &mut event_pump, &mut quit);
+        handle_events(&mut game, &mut event_pump);
         render_scene(&mut canvas, &textures, &game);
 
-        if quit {
+        if game.quit {
             break;
         }
     }
 }
 
-fn handle_events(game: &mut Game, event_pump: &mut EventPump, quit: &mut bool) {
+fn handle_events(game: &mut Game, event_pump: &mut EventPump) {
     use sdl2::event::Event::{KeyDown,Quit};
     use sdl2::keyboard::Keycode::*;
 
@@ -96,7 +92,7 @@ fn handle_events(game: &mut Game, event_pump: &mut EventPump, quit: &mut bool) {
 
     for event in event_pump.poll_iter() {
         match event {
-            Quit { .. } | KeyDown { keycode: Some(Escape), .. } => { *quit = true; }
+            Quit { .. } | KeyDown { keycode: Some(Escape), .. } => { game.quit = true; }
             KeyDown { keycode: Some(Left), .. } => { dx -= 1; }
             KeyDown { keycode: Some(Right), .. } => { dx += 1; }
             KeyDown { keycode: Some(Up), .. } => { p.rotate(&game.map); }

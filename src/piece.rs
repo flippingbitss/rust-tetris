@@ -2,7 +2,7 @@ use crate::game_color::GameColor;
 use std::default::Default;
 use crate::others::{GameMap, PieceMatrix, Presence, PieceType};
 use crate::constants::{NUM_BLOCKS_Y,NUM_BLOCKS_X};
-use rand::random;
+use rand::{random, thread_rng, Rng};
 
 #[derive(Default, Copy, Clone)]
 pub struct Piece {
@@ -15,7 +15,10 @@ pub struct Piece {
 
 impl Piece {
     pub fn random() -> Self {
-        Piece::from(random::<PieceType>())
+        let mut p = Piece::from(random::<PieceType>());
+        p.x  = thread_rng().gen_range(0, NUM_BLOCKS_X - 2) as isize;
+        p.y = -1;
+        p
     }
 
     pub fn rotate(&mut self, game_map: &GameMap) {
@@ -87,6 +90,7 @@ impl Piece {
         }
     }
 
+    #[allow(dead_code)]
     pub fn get_filled_region(&self, matrix: PieceMatrix) -> (usize, usize, usize, usize) {
         let (mut min_x, mut min_y, mut max_x, mut max_y) = (4,4,0,0);
 

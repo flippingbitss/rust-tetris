@@ -11,6 +11,7 @@ pub struct Game {
     pub lines_cleared: usize,
     pub current_level: usize,
     pub map: Vec<Vec<Presence>>,
+    pub quit: bool
 }
 
 impl Game {
@@ -21,6 +22,7 @@ impl Game {
             lines_cleared: 0,
             current_level: 0,
             map: vec![vec![Presence::No; NUM_BLOCKS_X]; NUM_BLOCKS_Y],
+            quit: false
         }
     }
 
@@ -42,15 +44,19 @@ impl Game {
     }
 
     pub fn finalize_move(&mut self, piece: &mut Piece) {
-        piece.freeze(&mut self.map);
-        self.check_lines();
-        *piece = Piece::random();
+        if piece.y < 0 {
+            self.quit = true;
+        } else {
+            piece.freeze(&mut self.map);
+            self.check_lines();
+            *piece = Piece::random();
+        }
     }
 
     fn increase_lines(&mut self, delta: usize) {
         self.lines_cleared += delta;
         if self.lines_cleared > LEVEL_LINES[self.current_level] {
-            self.current_level += 1;
+            self.current_level = usize::max(self.current_level + 1, NUM_LEVELS - 1)
         }
     }
 }
