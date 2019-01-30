@@ -12,7 +12,7 @@ mod piece;
 use rand::prelude::*;
 
 
-use sdl2::render::{Canvas, Texture};
+use sdl2::render::{Canvas, Texture, BlendMode};
 use sdl2::video::{Window};
 use sdl2::Sdl;
 use sdl2::EventPump;
@@ -54,7 +54,7 @@ fn main() {
         texture!(GameColor::Orange),
         texture!(GameColor::Purple),
         texture!(GameColor::Gray),
-        texture!(GameColor::Pink),
+        texture!(GameColor::Pink)
     ];
 
 
@@ -117,7 +117,8 @@ fn render_scene(mut canvas: &mut Canvas<Window>, textures: &[Texture; 9], game: 
     canvas.clear();
 
     draw_map(&mut canvas, &textures, &game.map);
-    draw_piece(&mut canvas, &textures, &game.current_piece.unwrap());
+    draw_piece(&mut canvas, &textures, &game.current_piece.unwrap(), &game.get_shadow_piece());
+
     canvas.present();
 
     sleep(Duration::new(0, 1_000_000_000u32 / 60)); // for 60 fps TODO: use better time sync

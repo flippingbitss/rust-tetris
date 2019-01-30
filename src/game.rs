@@ -59,4 +59,10 @@ impl Game {
             self.current_level = usize::max(self.current_level + 1, NUM_LEVELS - 1)
         }
     }
+
+    pub fn get_shadow_piece(&self) -> Piece {
+        let mut p = self.current_piece.unwrap().clone();
+        while p.move_position(&self.map, p.x, p.y + 1) {}
+        p
+    }
 }
