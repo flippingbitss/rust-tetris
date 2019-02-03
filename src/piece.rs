@@ -61,14 +61,14 @@ impl Piece {
         for mx in 0..4isize {
             for my in 0..4isize {
                 if state_m[my as usize][mx as usize] != Presence::No {
-                    if  x + mx < 0 ||
-                        y + my < 0 ||
-                        x + mx >= NUM_BLOCKS_X as isize ||
+                    if x + mx < 0 || y + my < 0 {
+                        return y < 0;
+                    }
+                    if x + mx >= NUM_BLOCKS_X as isize ||
                         y + my >= NUM_BLOCKS_Y as isize ||
                         game_map[(y + my) as usize][(x + mx) as usize] != Presence::No {
-//                            println!("test position false at ({},{}) for state {}", x + mx as isize, y + my as isize, state);
                             return false;
-                        }
+                    }
                 }
             }
         }
